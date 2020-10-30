@@ -11,6 +11,7 @@ body{
     position: fixed;top: 100px;left: 50%;transform:translate(-180px,0px);width: 360px;
     background-color: #eeeeee;box-shadow: 0px 0px 10px #000000;
     display: none;z-index: 2;
+    transition: opacity 0.5s;
 }
 .dialog-mask{
     position: fixed;top: 0px;left: 0px;width: 100%;height: 100%;
@@ -19,7 +20,7 @@ body{
 }
 .dialog>.head{
     background-color: #444444;color:#ffffff;font-weight: bold;
-    padding: 10px;
+    padding: 10px;cursor: move;
 }
 .dialog>.head>.close{
     float: right;cursor: pointer;
@@ -35,10 +36,42 @@ var dialogMask;
 window.onload=function(){ 
     dialog=document.getElementById("dialog");
     dialogMask=document.getElementById("dialog-mask");
+    // 當滑鼠按著對話框標頭的時候，啟動拖曳程序
+    var head=document.getElementById("dialog-head");
+    head.addEventListener("mousedown", dragDialog);
 };
+function dragDialog(e){
+    // alert(e.clientX+","+e.clientY); 抓到滑鼠的座標位置
+    // 抓到滑鼠的座標位置，和對話框位置的差異
+    var differX=e.clientX-dialog.offsetLeft;
+    var differY=e.clientY-dialog.offsetTop;
+    // 撰寫拖曳的程序
+    var move=function(e){
+        // 當滑鼠在畫面中移動的時候，會連續被呼叫（拖曳中）
+        dialog.style.left=(e.clientX-differX)+"px";
+        dialog.style.top=(e.clientY-differY)+"px";
+    };
+    var end=function(e){
+        // 當使用者放開滑鼠的時候，會被呼叫一次（拖曳結束）
+        // 當拖曳結束，清除事件處理器
+        document.removeEventListener("mousemove", move);
+        document.removeEventListener("mouseup", end);
+    };
+    document.addEventListener("mousemove", move);
+    document.addEventListener("mouseup", end);
+}
 function showDialog(){
+    // 先把對話框位置強制放到中間偏上方
+    dialog.style.left="50%";
+    dialog.style.top="100px";
+    // 先將透明度設定成0 (全透明)
+    dialog.style.opacity=0;
     dialog.style.display="block";
     dialogMask.style.display="block";
+    // 給電腦一些時間（0.01秒），再把對話框透明度設定成 1 (不透明)
+    window.setTimeout(function(){
+        dialog.style.opacity=1;
+    }, 10);
 }
 function closeDialog(){
     dialog.style.display="none";
@@ -49,16 +82,16 @@ function closeDialog(){
 <body>
     <button onclick="showDialog();">聯絡資訊</button>
     <div id="dialog" class="dialog">
-        <div class="head">
+        <div id="dialog-head" class="head">
             我的聯絡資訊
             <div onclick="closeDialog();"class="close">X</div>
         </div>
         <div class="content">
-        在這裡面加入對畫框中的內容<br/>
+        在這裡面加入對話框中的內容<br/>
         例如 Email: enchilo@gmail.com
         </div>
     </div>
-    <div id="dialog-mask" class="dialog-mask"></div>
+    <div id="dialog-mask" class="dialog-mask" onclick="closeDialog();"></div>
 
 </body>
 </html>
